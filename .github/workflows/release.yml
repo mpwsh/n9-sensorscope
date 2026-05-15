@@ -54,6 +54,17 @@ jobs:
           echo "tag=v${VERSION}"  >> "$GITHUB_OUTPUT"
           echo "Building ${APP_NAME} ${VERSION}"
 
+      - name: Stamp version into debian/changelog
+        run: |
+          VERSION="${{ steps.ver.outputs.version }}"
+          CHANGELOG="qtc_packaging/debian_harmattan/changelog"
+          # Replace the version in the first line only, leave the rest of the
+          # changelog untouched. dpkg-buildpackage only reads the version from
+          # the top entry anyway.
+          sed -i "1s/^${APP_NAME} ([^)]*)/${APP_NAME} (${VERSION})/" "${CHANGELOG}"
+          echo "=== First line of changelog ==="
+          head -1 "${CHANGELOG}"
+
       - name: Pull build image
         # ~2-3 min on first pull; layers are cached on the runner across steps.
         # Public image, no docker login needed.
