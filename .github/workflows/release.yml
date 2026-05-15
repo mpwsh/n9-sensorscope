@@ -136,7 +136,7 @@ jobs:
       - name: Trigger publish in n9-portal
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: publish-deb.yml
+          workflow: publish.yml
           repo: mpwsh/n9-portal
           token: ${{ steps.app-token.outputs.token }}
           inputs: |
