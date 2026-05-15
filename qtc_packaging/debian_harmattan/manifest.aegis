@@ -1,0 +1,7 @@
+<aegis>
+    <request policy="add">
+        <credential name="Location" />
+        <credential name="NetworkServices" />
+        <credential name="CellularData" />
+    </request>
+</aegis>

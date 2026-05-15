@@ -1,0 +1,6 @@
+sensorscope (1.0.0) unstable; urgency=low
+
+  * Initial release. List + detail explorer of Qt Mobility sensors
+    and system info sources.
+
+ -- SensorScope <noreply@example.org>  Thu, 14 May 2026 06:00:00 +0000

@@ -1,0 +1,15 @@
+Source: sensorscope
+Section: user/other
+Priority: optional
+Maintainer: SensorScope <noreply@example.org>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.3
+
+Package: sensorscope
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Sensor and system info explorer for Harmattan
+ SensorScope is a diagnostic app for the Nokia N9 that lists every
+ sensor and system-info source available via Qt Mobility and lets
+ the user inspect their current values.
+XB-Maemo-Display-Name: SensorScope
