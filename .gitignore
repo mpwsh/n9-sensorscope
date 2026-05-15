@@ -1,0 +1,11 @@
+build/
+build-stamp
+debian/
+Makefile
+*.o
+moc_*.cpp
+moc_*.h
+sensorscope
+sensorscope_*.deb
+sensorscope_*.changes
+sensorscope.pro.user
