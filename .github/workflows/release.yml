@@ -137,7 +137,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: publish.yml
-          repo: ${{ env.PORTAL_OWNER }}/${{ env.PORTAL_REPO }}
+          repo: mpwsh/n9-portal
           token: ${{ steps.app-token.outputs.token }}
           ref: main
           inputs: |
