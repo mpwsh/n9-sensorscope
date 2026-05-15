@@ -112,3 +112,25 @@ jobs:
           files: ${{ steps.deb.outputs.path }}
           generate_release_notes: true
           fail_on_unmatched_files: true
+
+      - name: Generate installation token for n9-portal
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: mpwsh
+          repositories: n9-portal
+
+      - name: Trigger publish in n9-portal
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: publish-deb.yml
+          repo: mpwsh/n9-portal
+          token: ${{ steps.app-token.outputs.token }}
+          inputs: |
+            {
+              "deb_url":  "https://github.com/${{ github.repository }}/releases/download/${{ steps.ver.outputs.tag }}/${{ steps.deb.outputs.name }}",
+              "app_name": "${{ env.APP_NAME }}",
+              "version":  "${{ steps.ver.outputs.version }}"
+            }
