@@ -2,10 +2,6 @@ name: Release
 
 # Builds the .deb inside the mpwsh/n9-build container and attaches it to a
 # GitHub Release. Triggered by tag pushes (vX.Y.Z) or manual dispatch.
-#
-# The portal-publish step (sending the asset URL to n9-portal so apt picks
-# it up) is intentionally not included here — add it later as a separate
-# step once the publish pipeline is in place.
 
 on:
   push:
@@ -40,7 +36,6 @@ jobs:
       - name: Resolve version
         id: ver
         run: |
-          # Tag push: strip leading 'v'. Manual: take the input verbatim.
           if [ "${{ github.event_name }}" = "push" ]; then
             VERSION="${GITHUB_REF_NAME#v}"
           else
@@ -52,33 +47,29 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v${VERSION}"  >> "$GITHUB_OUTPUT"
-          echo "Building ${APP_NAME} ${VERSION}"
 
       - name: Stamp version into debian/changelog
+        # dpkg-buildpackage reads the version from the top changelog entry.
+        # Rewrite just the version in the first line; leave the rest alone.
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
           CHANGELOG="qtc_packaging/debian_harmattan/changelog"
-          # Replace the version in the first line only, leave the rest of the
-          # changelog untouched. dpkg-buildpackage only reads the version from
-          # the top entry anyway.
           sed -i "1s/^${APP_NAME} ([^)]*)/${APP_NAME} (${VERSION})/" "${CHANGELOG}"
           echo "=== First line of changelog ==="
           head -1 "${CHANGELOG}"
 
       - name: Pull build image
-        # ~2-3 min on first pull; layers are cached on the runner across steps.
-        # Public image, no docker login needed.
         run: docker pull ${{ env.BUILD_IMAGE }}
 
       - name: Build .deb inside container
-        # The image's /usr/local/bin/n9 script handles qmake + make + dpkg-buildpackage.
-        # Mount the repo as /work, run as root (default in the image).
+        # The n9 script in the image auto-detects /opt/QtSDK and builds
+        # locally inside the container. Same script we use on dev machines.
         run: |
           docker run --rm \
             -v "${{ github.workspace }}:/work" \
             -w /work \
             ${{ env.BUILD_IMAGE }} \
-            /usr/local/bin/n9 build --path /work
+            n9 build --path /work
 
       - name: Locate .deb
         id: deb
@@ -91,13 +82,12 @@ jobs:
           fi
           DEB_NAME="$(basename "$DEB_PATH")"
           DEB_SIZE="$(stat -c%s "$DEB_PATH")"
-          echo "path=$DEB_PATH"   >> "$GITHUB_OUTPUT"
-          echo "name=$DEB_NAME"   >> "$GITHUB_OUTPUT"
-          echo "size=$DEB_SIZE"   >> "$GITHUB_OUTPUT"
+          echo "path=$DEB_PATH" >> "$GITHUB_OUTPUT"
+          echo "name=$DEB_NAME" >> "$GITHUB_OUTPUT"
+          echo "size=$DEB_SIZE" >> "$GITHUB_OUTPUT"
           echo "Built: $DEB_NAME ($DEB_SIZE bytes)"
 
       - name: Inspect .deb
-        # Useful sanity dump in the run log. dpkg-deb is preinstalled on Ubuntu runners.
         run: |
           echo "=== Control metadata ==="
           dpkg-deb -I "${{ steps.deb.outputs.path }}"
@@ -106,7 +96,6 @@ jobs:
           dpkg-deb -c "${{ steps.deb.outputs.path }}"
 
       - name: Upload .deb as workflow artifact
-        # Lets you download from the Actions run page even if the release step fails.
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.deb.outputs.name }}
@@ -114,8 +103,6 @@ jobs:
           if-no-files-found: error
 
       - name: Create / update GitHub Release with .deb attached
-        # On tag push the release is created with the tag name.
-        # On manual dispatch the tag must already exist OR set make_latest=false.
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
